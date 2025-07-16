@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Productos | Sistema CRUD</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="container">
+    <h1>Lista de productos</h1>
+    <section class="products-list">
+    </section>
+    <a href="index.html">Volver al inicio</a>
+  </main>
+
+  <script type="module" src="firebase-config.js"></script>
+  <script type="module">
+    import { db } from './firebase-config.js';
+    import { collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const productsList = document.querySelector('.products-list');
+    function badgeClass(estado) {
+      if (estado === 'Disponible') return 'badge disponible';
+      if (estado === 'Agotado') return 'badge agotado';
+      return 'badge descontinuado';
+    }
+    function renderProduct(data) {
+      const precioRegular = data.precio_regular && data.precio_regular > data.precio ? `<span class="price-regular">$${data.precio_regular.toFixed(2)}</span>` : '';
+      const precio = `<span class="price">$${data.precio.toFixed(2)}</span>`;
+      return `
+        <article class="product-card">
+          <img src="https://via.placeholder.com/300x180?text=Sin+imagen" alt="Imagen del producto">
+          <div class="product-info">
+            <h2>${data.nombre}</h2>
+            <div class="price-row">
+              ${precioRegular}
+              ${precio}
+            </div>
+            <p>${data.descripcion}</p>
+            <span class="${badgeClass(data.estado)}">${data.estado}</span>
+          </div>
+        </article>
+      `;
+    }
+    // Escucha en tiempo real
+    onSnapshot(collection(db, 'products'), (snapshot) => {
+      if (snapshot.empty) {
+        productsList.innerHTML = '<p style="text-align:center;color:#888;">No hay productos aún.</p>';
+        return;
+      }
+      productsList.innerHTML = '';
+      snapshot.forEach(doc => {
+        productsList.innerHTML += renderProduct(doc.data());
+      });
+    });
+  </script>
+</body>
+</html>
